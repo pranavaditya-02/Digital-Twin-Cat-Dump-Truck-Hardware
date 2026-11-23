@@ -1,13 +1,15 @@
 import { useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { useSimulationStore } from '../store/simulationStore';
+import { getBackendUrl } from '../utils/backendConfig';
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || `http://localhost:${import.meta.env.VITE_BACKEND_PORT || 5001}`;
-
-const socket = io(BACKEND, {
-  transports: ['polling'],
-  autoConnect: false
-});
+const BACKEND = getBackendUrl();
+const socket = BACKEND
+  ? io(BACKEND, {
+      transports: ['polling'],
+      autoConnect: false
+    })
+  : null;
 
 export function useSocket() {
   const setConnected = useSimulationStore((s) => s.setConnected);
@@ -15,6 +17,11 @@ export function useSocket() {
   const appendDecisionLog = useSimulationStore((s) => s.appendDecisionLog);
 
   useEffect(() => {
+    if (!socket) {
+      setConnected(false);
+      return undefined;
+    }
+
     socket.on('connect', () => setConnected(true));
     socket.on('disconnect', () => setConnected(false));
     socket.on('telemetry', ingestTelemetry);

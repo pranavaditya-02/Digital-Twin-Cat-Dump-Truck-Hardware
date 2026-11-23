@@ -1,13 +1,16 @@
 import { useSimulationStore } from '../store/simulationStore';
+import { getBackendUrl } from '../utils/backendConfig';
 
 // Start a polling loop outside of React hooks to avoid impacting hook ordering.
 // Returns a stop function.
 export function startSimulationPolling(pollInterval = 1500) {
   let mounted = true;
   const store = useSimulationStore;
-  const BACKEND = import.meta.env.VITE_BACKEND_URL || `http://localhost:${import.meta.env.VITE_BACKEND_PORT || 5001}`;
+  const BACKEND = getBackendUrl();
 
   async function tick() {
+    if (!BACKEND) return;
+
     try {
       const state = store.getState();
       const { scenario, materialProfile, control, ingestTelemetry, clearControlCommand } = state;
@@ -40,4 +43,3 @@ export function startSimulationPolling(pollInterval = 1500) {
     clearInterval(id);
   };
 }
-
